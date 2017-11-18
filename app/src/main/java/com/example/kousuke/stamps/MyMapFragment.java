@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -24,7 +25,11 @@ public class MyMapFragment extends MapFragment {
             public void onMapReady(GoogleMap googleMap) {
                 if (ContextCompat.checkSelfPermission(MainActivity.getInstance().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED) {
+
+                    // 地図を有効化する
                     googleMap.setMyLocationEnabled(true);
+                    // プレイスピッカーの実装
+
                 } else {
                     // TODO: エラー時の挙動を実装
                     // Show rationale and request permission.
