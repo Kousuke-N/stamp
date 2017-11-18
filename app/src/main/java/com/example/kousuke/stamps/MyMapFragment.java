@@ -28,8 +28,6 @@ public class MyMapFragment extends MapFragment {
 
                     // 地図を有効化する
                     googleMap.setMyLocationEnabled(true);
-                    // プレイスピッカーの実装
-
                 } else {
                     // TODO: エラー時の挙動を実装
                     // Show rationale and request permission.

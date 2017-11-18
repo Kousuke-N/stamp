@@ -8,14 +8,12 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.places.Places;
 
-public class MainActivity extends AppCompatActivity
-        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
+public class MainActivity extends AppCompatActivity{
 
     static MainActivity instance = null;
 
-    private GoogleApiClient myGoogleApiClient;
+    private GoogleApiConnector googleApiConnector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,48 +21,23 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         instance = this;
 
-        // google api serviceとの接続
-        myGoogleApiClient = new GoogleApiClient
-                .Builder(this)
-                .addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+        googleApiConnector.build(this);
     }
 
     @Override
     protected void onStart(){
         super.onStart();
-        myGoogleApiClient.connect();
+        googleApiConnector.connect();
     }
 
     @Override
     protected void onStop(){
-        myGoogleApiClient.disconnect();
+        googleApiConnector.disconnect();
         super.onStop();
     }
 
     // どこからでもMainActivityを参照できるようにするためのメソッド
     static MainActivity getInstance(){
         return instance;
-    }
-
-    // グーグルAPIサービスへの接続成功
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-
-    }
-
-    // グーグルAPIサービスとの接続中断
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.d("GoogleApiService", "中断");
-    }
-
-    // グーグルAPIサービスとの接続失敗
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d("GoogleApiService", "失敗");
     }
 }
