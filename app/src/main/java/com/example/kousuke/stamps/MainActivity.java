@@ -10,18 +10,16 @@ import com.google.android.gms.maps.MapFragment;
 
 public class MainActivity extends AppCompatActivity {
 
-    MapFragment mf;
+    static MainActivity instance = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        instance = this;
+    }
 
-        //        mf= MapFragment.newInstance();
-        //
-        //        FragmentManager fm = getFragmentManager();
-        //        FragmentTransaction ft = fm.beginTransaction();
-        //        ft.add(android.R.id.content, mf);
-        //        ft.commit();
+    static MainActivity getInstance(){
+        return instance;
     }
 }
