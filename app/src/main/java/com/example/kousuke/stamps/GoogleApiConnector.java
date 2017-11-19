@@ -85,29 +85,7 @@ public class GoogleApiConnector
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         isConnected = true;
-
-        if (ContextCompat.checkSelfPermission(MainActivity.getInstance().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            // 現在地の取得
-            PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi
-                    .getCurrentPlace(googleApiClient, null);
-            result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
-                @Override
-                public void onResult(@NonNull PlaceLikelihoodBuffer placeLikelihoods) {
-                    for ( PlaceLikelihood placeLikelihood : placeLikelihoods ) {
-                        Log.i("PickerTest", String.format( "Place '%s' has likelihood: %g",
-                                placeLikelihood.getPlace().getName(),
-                                placeLikelihood.getLikelihood()) );
-
-                    }
-                    placeLikelihoods.release();
-                }
-            });
-        } else {
-            // TODO: エラー時の挙動を実装
-            // Show rationale and request permission.
-        }
-
+        Log.d("GoogleApiService", "成功");
     }
 
     // グーグルAPIサービスとの接続中断

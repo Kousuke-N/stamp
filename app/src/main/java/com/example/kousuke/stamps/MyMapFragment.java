@@ -11,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -26,7 +27,7 @@ import com.google.android.gms.maps.model.LatLng;
  */
 
 public class MyMapFragment extends MapFragment
-        implements LocationListener {
+        implements LocationListener, OnMapReadyCallback {
 
     // MainActivityのコンテキスト
     private Context context;
@@ -38,48 +39,34 @@ public class MyMapFragment extends MapFragment
     private LocationManager locationManager;
 
     private static final int MIN_TIME = 1000;
-    private static final float MIN_DISTANCE = 50;
+    private static final float MIN_DISTANCE = 1;
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
 
         context = MainActivity.getInstance().getApplicationContext();
 
-        // Map情報取得
-        this.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap gmap) {
-                // パーミッションの確認
-                if (ContextCompat.checkSelfPermission(
-                        context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    googleMap = gmap;
-                    // 地図を有効化する
-                    googleMap.setMyLocationEnabled(true);
-                } else {
-                    // TODO: エラー時の挙動を実装
-                    // Show rationale and request permission.
-                }
-            }
-        });
-
         // locationManagerインスタンス作成
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        // GPSの監視開始
         startGPS();
 
+        // Map情報取得
+        this.getMapAsync(this);
     }
 
     @Override
     public void onPause() {
         if (locationManager != null) {
             stopGPS();
-        }else{
+        } else {
             // TODO:locationManagerがnullの時の挙動
         }
         super.onPause();
     }
 
     private void stopGPS() {
-        if(locationManager != null){
+        if (locationManager != null) {
             // update を止める
             if (ContextCompat.checkSelfPermission(context,
                     Manifest.permission.ACCESS_FINE_LOCATION) !=
@@ -94,6 +81,7 @@ public class MyMapFragment extends MapFragment
     }
 
     private void startGPS() {
+        Log.d("MyMapFragment", "GPS観測開始");
         final boolean gpsEnabled = locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
         if (!gpsEnabled) {
             // TODO:GPSを設定するように促す
@@ -123,12 +111,13 @@ public class MyMapFragment extends MapFragment
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d("MyMapFragment", "onLocationChanged");
+        Log.v("Main", String.format("Current Locatin is %s,%s",
+                String.valueOf(location.getLatitude()),
+                String.valueOf(location.getLongitude())));
         // 現在地の表示を変える処理
-        CameraUpdate cu =
-                CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(location.getLatitude(), location.getLongitude()),15);
-        googleMap.moveCamera(cu);
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
+                new LatLng(location.getLatitude(), location.getLongitude()), R.integer.map_scale_rate);
+        googleMap.moveCamera(cameraUpdate);
     }
 
     @Override
@@ -144,5 +133,35 @@ public class MyMapFragment extends MapFragment
     @Override
     public void onProviderDisabled(String s) {
 
+    }
+
+    // 地図の準備ができた時に呼ばれるコールバック関数
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        // パーミッションの確認
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+            // ローカル変数に入れる
+            this.googleMap = googleMap;
+
+            // 地図の表示を変えるクラス
+            CameraUpdate cameraUpdate;
+
+            // 前回の位置を判定
+            if (locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null) {
+                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                cameraUpdate = CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()),
+                        R.integer.map_scale_rate);
+            } else {
+                cameraUpdate = CameraUpdateFactory.zoomBy(R.integer.map_scale_rate);
+            }
+            googleMap.moveCamera(cameraUpdate);
+            // 地図を有効化する
+            googleMap.setMyLocationEnabled(true);
+        } else {
+            // TODO: エラー時の挙動を実装
+            // Show rationale and request permission.
+        }
     }
 }
