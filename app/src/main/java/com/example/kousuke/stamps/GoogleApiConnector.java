@@ -1,5 +1,6 @@
 package com.example.kousuke.stamps;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -25,11 +26,17 @@ import android.os.Looper;
 import android.os.UserHandle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Display;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.places.PlaceLikelihood;
+import com.google.android.gms.location.places.PlaceLikelihoodBuffer;
 import com.google.android.gms.location.places.Places;
 
 import java.io.File;
@@ -47,6 +54,7 @@ public class GoogleApiConnector
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     static GoogleApiClient googleApiClient;
+    private boolean isConnected = false;
 
     public void build(MainActivity mainActivity) {
         googleApiClient = new GoogleApiClient
@@ -60,31 +68,59 @@ public class GoogleApiConnector
 
     public void connect() {
         googleApiClient.connect();
+        isConnected = true;
     }
 
     public void disconnect() {
         googleApiClient.disconnect();
+        isConnected = false;
     }
 
-    static GoogleApiClient getGoogleApiClient(){
+    // GoogleApiClientをどこでも取得できるようにするメソッド
+    static GoogleApiClient getGoogleApiClient() {
         return googleApiClient;
     }
 
-    // グーグルAPIサービスとの接続失敗
+    // グーグルAPIサービスとの接続成功
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        isConnected = true;
+
+        if (ContextCompat.checkSelfPermission(MainActivity.getInstance().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            // 現在地の取得
+            PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi
+                    .getCurrentPlace(googleApiClient, null);
+            result.setResultCallback(new ResultCallback<PlaceLikelihoodBuffer>() {
+                @Override
+                public void onResult(@NonNull PlaceLikelihoodBuffer placeLikelihoods) {
+                    for ( PlaceLikelihood placeLikelihood : placeLikelihoods ) {
+                        Log.i("PickerTest", String.format( "Place '%s' has likelihood: %g",
+                                placeLikelihood.getPlace().getName(),
+                                placeLikelihood.getLikelihood()) );
+
+                    }
+                    placeLikelihoods.release();
+                }
+            });
+        } else {
+            // TODO: エラー時の挙動を実装
+            // Show rationale and request permission.
+        }
 
     }
 
     // グーグルAPIサービスとの接続中断
     @Override
     public void onConnectionSuspended(int i) {
+        isConnected = false;
         Log.d("GoogleApiService", "中断");
     }
 
     // グーグルAPIサービスとの接続失敗
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        isConnected = false;
         Log.d("GoogleApiService", "失敗");
     }
 }
