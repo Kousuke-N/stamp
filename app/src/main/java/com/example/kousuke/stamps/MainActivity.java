@@ -26,16 +26,6 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
         instance = this;
         setContentView(R.layout.activity_main);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
-        ViewPager viewPager = (ViewPager) findViewById(R.id.viewPager);
-
-        MyFragmentPagerAdapter adapter = new MyFragmentPagerAdapter(getSupportFragmentManager());
-
-        viewPager.setAdapter(adapter);
-//        viewPager.addOnPageChangeListener(this);
-
-        tabLayout.setupWithViewPager(viewPager);
-
         googleApiConnector = new GoogleApiConnector();
         googleApiConnector.build(this);
     }
