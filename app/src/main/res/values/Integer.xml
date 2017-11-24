@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="map_scale_rate">15</integer>
+    <integer name="map_scale_rate">10</integer>
 </resources>
