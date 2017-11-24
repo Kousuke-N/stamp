@@ -44,15 +44,15 @@ public class MapExample extends MapFragment
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
 
-        context = MainActivity.getInstance().getApplicationContext();
+//        context = MainActivity.getInstance().getApplicationContext();
 
         // locationManagerインスタンス作成
-        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        // GPSの監視開始
-        startGPS();
-
-        // Map情報取得
-        this.getMapAsync(this);
+//        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+//        // GPSの監視開始
+//        startGPS();
+//
+//        // Map情報取得
+//        this.getMapAsync(this);
     }
 
     @Override
