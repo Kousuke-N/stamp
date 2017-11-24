@@ -1,4 +1,4 @@
-package com.example.kousuke.stamps;
+package com.example.kousuke.stamps.Action;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
@@ -31,6 +31,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Display;
 
+import com.example.kousuke.stamps.MainActivity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
