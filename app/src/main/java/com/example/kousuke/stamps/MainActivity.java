@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toolbar;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -31,15 +32,6 @@ public class MainActivity extends AppCompatActivity implements ViewPager.OnPageC
 
         googleApiConnector = new GoogleApiConnector();
         googleApiConnector.build(this);
-
-        FloatingActionButton floatingActionButton = findViewById(R.id.list_button);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, StampList.class);
-                startActivity(intent);
-            }
-        });
     }
 
     @Override
