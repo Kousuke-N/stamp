@@ -17,7 +17,14 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
-public class MainActivity extends AppCompatActivity implements AppCompatCallback {
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+
+public class MainActivity extends AppCompatActivity
+        implements AppCompatCallback, LocationListener, OnMapReadyCallback {
+
+    MapFragment mapFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +44,8 @@ public class MainActivity extends AppCompatActivity implements AppCompatCallback
             }
         });
 
-        MyMapFragment myMapFragment = (MyMapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
+        // 地図のフラグメントを取得（設定は先）
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
 
 
         // GPS(locationManager)の設定
@@ -59,23 +67,26 @@ public class MainActivity extends AppCompatActivity implements AppCompatCallback
 
         } else {
             // locationManagerの設定
-            LocationManager locationManager= (LocationManager)getSystemService(LOCATION_SERVICE);
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             String locationProvider = null;
 
             // GPSが利用可能かチェック
-            if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 locationProvider = LocationManager.GPS_PROVIDER;
             }
             // GPSプロバイダが有効になっていない場合
-            else if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+            else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                 locationProvider = LocationManager.NETWORK_PROVIDER;
             }
             // いずれも利用可能でない場合はGPSを設定する画面に遷移
-            else{
+            else {
                 Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(settingsIntent);
                 return;
             }
+
+            // mapFragmentの設定
+            mapFragment.getMapAsync(this);
 
             // 位置情報を通知するための最小時間間隔（ミリ秒）
             final long minTime = 500;
@@ -84,18 +95,16 @@ public class MainActivity extends AppCompatActivity implements AppCompatCallback
 
             // 利用可能なロケーションプロバイダによる位置情報の取得の開始
             // FIXME: 本来であれば、リスナが複数回登録されないようにチェックする必要がある
-            locationManager.requestLocationUpdates(locationProvider, minTime, minDistance, myMapFragment);
+            locationManager.requestLocationUpdates(locationProvider, minTime, minDistance, this);
             // 最新の位置情報
             Location location = locationManager.getLastKnownLocation(locationProvider);
-
-            if(location != null){
-                Log.i("MainActivity", location.getLatitude() + ":" + String.valueOf(location.getLongitude()));
-            }
         }
     }
 
+// AppCompatActivity *******************************************************************************
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults){
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
 
     }
 
@@ -110,4 +119,40 @@ public class MainActivity extends AppCompatActivity implements AppCompatCallback
         // let's leave this empty, for now
         super.onSupportActionModeFinished(mode);
     }
+// *************************************************************************************************
+
+// OnMapReadyCallback ******************************************************************************
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+
+    }
+// *************************************************************************************************
+
+// LocationListener ********************************************************************************
+
+    // 位置情報更新時
+    @Override
+    public void onLocationChanged(Location location) {
+
+    }
+
+    // ロケーションプロバイダが利用可能になった時
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    // ロケーションプロバイダが利用不可になった時
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    // ロケーションステータスが変化時
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+// *************************************************************************************************
 }
