@@ -25,15 +25,5 @@ public class ListActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-        // FABの設定
-        FloatingActionButton fab = findViewById(R.id.fab_to_create);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ListActivity.this, CreateItemActivity.class);
-                startActivity(intent);
-            }
-        });
     }
 }
