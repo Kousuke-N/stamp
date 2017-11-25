@@ -24,9 +24,12 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 public class MainActivity extends AppCompatActivity
@@ -59,14 +62,12 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        // 地図のフラグメントを取得（設定は先）
+        // 地図のフラグメントを取得
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
-        // mapFragmentの設定
         mapFragment.getMapAsync(this);
+    }
 
-
-        // GPS(locationManager)の設定
-        // 権限がないとき
+    private  void init(){
         if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -80,6 +81,8 @@ public class MainActivity extends AppCompatActivity
                         MY_PERMISSIONS_REQUEST_FINE_LOCATION);
             }
         } else {
+            map.setMyLocationEnabled(true);
+
             // locationManagerの設定
             LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             String locationProvider = null;
@@ -113,16 +116,11 @@ public class MainActivity extends AppCompatActivity
                         public void onSuccess(Location location) {
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-
+                                CameraPosition cameraPosition = new CameraPosition.Builder().target(new LatLng(location.getLatitude(), location.getLongitude())).zoom(15).build();
+                                map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                             }
                         }
                     });
-            LocationRequest mLocationRequest = new LocationRequest();
-            mLocationRequest.setInterval(interval);
-            mLocationRequest.setFastestInterval(fastestInterval);
-            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                    .addLocationRequest(mLocationRequest);
         }
     }
 
@@ -169,21 +167,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onMapReady(GoogleMap map) {
-        if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                    || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                requestPermission();
-            } else {
-                // 権限要求
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_CONTACTS},
-                        MY_PERMISSIONS_REQUEST_FINE_LOCATION);
-            }
-        } else {
-            map.setMyLocationEnabled(true);
-        }
+        this.map = map;
+        init();
     }
 
 // *************************************************************************************************
