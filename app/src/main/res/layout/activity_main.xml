@@ -23,7 +23,10 @@
             android:id="@+id/map_fragment"
             android:name="com.google.android.gms.maps.MapFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            app:cameraTargetLat="35.41"
+            app:cameraTargetLng="139.41"
+            app:cameraZoom="15"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_to_change_list"

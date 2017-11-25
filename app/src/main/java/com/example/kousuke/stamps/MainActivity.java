@@ -1,15 +1,18 @@
 package com.example.kousuke.stamps;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatCallback;
 import android.support.v7.view.ActionMode;
@@ -17,14 +20,26 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 public class MainActivity extends AppCompatActivity
         implements AppCompatCallback, LocationListener, OnMapReadyCallback {
 
-    MapFragment mapFragment;
+    private String TAG = "MainActivity";
+
+    private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
+
+    private MapFragment mapFragment;
+    private GoogleMap map;
+
+    private FusedLocationProviderClient mFusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +61,8 @@ public class MainActivity extends AppCompatActivity
 
         // 地図のフラグメントを取得（設定は先）
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
+        // mapFragmentの設定
+        mapFragment.getMapAsync(this);
 
 
         // GPS(locationManager)の設定
@@ -55,16 +72,13 @@ public class MainActivity extends AppCompatActivity
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                // TODO: ユーザに権限の説明が必要な場合
-                // ユーザが権限拒否やデバイスとして使えない場合falseを返すので注意
+                requestPermission();
             } else {
-                final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 1;
                 // 権限要求
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.READ_CONTACTS},
                         MY_PERMISSIONS_REQUEST_FINE_LOCATION);
             }
-
         } else {
             // locationManagerの設定
             LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -85,48 +99,93 @@ public class MainActivity extends AppCompatActivity
                 return;
             }
 
-            // mapFragmentの設定
-            mapFragment.getMapAsync(this);
 
             // 位置情報を通知するための最小時間間隔（ミリ秒）
-            final long minTime = 500;
+            final int fastestInterval = 500;
+            final int interval = 1000;
             // 位置情報を通知するための最小距離間隔（メートル）
             final long minDistance = 1;
 
-            // 利用可能なロケーションプロバイダによる位置情報の取得の開始
-            // FIXME: 本来であれば、リスナが複数回登録されないようにチェックする必要がある
-            locationManager.requestLocationUpdates(locationProvider, minTime, minDistance, this);
-            // 最新の位置情報
-            Location location = locationManager.getLastKnownLocation(locationProvider);
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            mFusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+
+                            }
+                        }
+                    });
+            LocationRequest mLocationRequest = new LocationRequest();
+            mLocationRequest.setInterval(interval);
+            mLocationRequest.setFastestInterval(fastestInterval);
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                    .addLocationRequest(mLocationRequest);
         }
     }
 
-// AppCompatActivity *******************************************************************************
+    // Permission handling for Android 6.0
+    private void requestPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.CAMERA)) {
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+            Log.d("MainActivity", "shouldShowRequestPermissionRationale:追加説明");
+            // 権限チェックした結果、持っていない場合はダイアログを出す
+            new AlertDialog.Builder(this)
+                    .setTitle("パーミッションの追加説明")
+                    .setMessage("このアプリを使用するにはパーミッションが必要です")
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.CAMERA},
+                                    MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+                        }
+                    })
+                    .create()
+                    .show();
+            return;
+        }
 
+        // 権限を取得する
+        ActivityCompat.requestPermissions(this, new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                },
+                MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+        return;
     }
 
     @Override
-    public void onSupportActionModeStarted(ActionMode mode) {
-        //let's leave this empty, for now
-        super.onSupportActionModeStarted(mode);
+    public void onResume(){
+        super.onResume();
     }
 
-    @Override
-    public void onSupportActionModeFinished(ActionMode mode) {
-        // let's leave this empty, for now
-        super.onSupportActionModeFinished(mode);
-    }
-// *************************************************************************************************
+
 
 // OnMapReadyCallback ******************************************************************************
 
     @Override
     public void onMapReady(GoogleMap map) {
+        if (ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                requestPermission();
+            } else {
+                // 権限要求
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_CONTACTS},
+                        MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+            }
+        } else {
+            map.setMyLocationEnabled(true);
+        }
     }
+
 // *************************************************************************************************
 
 // LocationListener ********************************************************************************
@@ -153,6 +212,76 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onProviderDisabled(String provider) {
 
+    }
+// *************************************************************************************************
+
+// AppCompatActivity *******************************************************************************
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        if (requestCode == MY_PERMISSIONS_REQUEST_FINE_LOCATION) {
+            if (grantResults.length != 1 ||
+                    grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "onRequestPermissionsResult:DENYED");
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                        || ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) ) {
+                    Log.d(TAG, "[show error]");
+                    new AlertDialog.Builder(this)
+                            .setTitle("パーミッション取得エラー")
+                            .setMessage("再試行する場合は、再度Requestボタンを押してください")
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    requestPermission();
+                                }
+                            })
+                            .create()
+                            .show();
+
+                } else {
+                    Log.d(TAG, "[show app settings guide]");
+                    new AlertDialog.Builder(this)
+                            .setTitle("パーミッション取得エラー")
+                            .setMessage("今後は許可しないが選択されました。アプリ設定＞権限をチェックしてください（権限をON/OFFすることで状態はリセットされます）")
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    openSettings();
+                                }
+                            })
+                            .create()
+                            .show();
+                }
+            } else {
+                Log.d(TAG, "onRequestPermissionsResult:GRANTED");
+                // TODO 許可された
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    private void openSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        //Fragmentの場合はgetContext().getPackageName()
+        Uri uri = Uri.fromParts("package", getPackageName(), null);
+        intent.setData(uri);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onSupportActionModeStarted(ActionMode mode) {
+        //let's leave this empty, for now
+        super.onSupportActionModeStarted(mode);
+    }
+
+    @Override
+    public void onSupportActionModeFinished(ActionMode mode) {
+        // let's leave this empty, for now
+        super.onSupportActionModeFinished(mode);
     }
 // *************************************************************************************************
 }
